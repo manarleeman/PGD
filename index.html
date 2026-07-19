@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prime Groove Construction — Project Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#0B1E3F; --navy2:#16305C; --navy3:#20406E;
+    --gold:#C6A15B; --goldSoft:#EFE4CC; --orange:#DB7B34;
+    --ink:#1B2434; --muted:#8A8578; --faint:#B4AFA3;
+    --bg:#F4F2EC; --card:#FFFFFF; --line:#E7E2D7;
+    --green:#2F7D5B; --greenSoft:#E2F0E8; --amber:#C6890F; --amberSoft:#F6ECCF;
+    --red:#B4472E; --redSoft:#F3E0DA;
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#D6D0C4;border-radius:9px}
+  button{font-family:var(--sans)}
+  input,textarea,select{font-family:var(--sans)}
+  input:focus,textarea:focus,select:focus{border-color:var(--gold)!important}
+
+  .app{display:flex;min-height:100vh}
+  /* sidebar */
+  .sidebar{width:250px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .brand{padding:26px 22px 20px;display:flex;align-items:center;gap:11px}
+  .brand .logo{width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--navy)}
+  .brand .name{font-family:var(--serif);font-size:16px;color:#fff;font-weight:500;line-height:1.1}
+  .brand .sub{font-size:10.5px;color:var(--gold);letter-spacing:1px;text-transform:uppercase}
+  nav{padding:8px 14px;flex:1}
+  .navbtn{width:100%;display:flex;align-items:center;gap:12px;padding:11px 14px;margin-bottom:4px;border-radius:10px;border:none;cursor:pointer;background:transparent;color:#9AA6BC;font-size:13.5px;font-weight:600;text-align:left;transition:all .18s;position:relative}
+  .navbtn:hover{color:#fff;background:rgba(255,255,255,.05)}
+  .navbtn.active{background:var(--navy2);color:#fff}
+  .navbtn.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--gold);border-radius:3px}
+  .navbtn svg{width:17px;height:17px;stroke:#7382A0}
+  .navbtn.active svg{stroke:var(--gold)}
+  .tagfoot{padding:18px 22px;border-top:1px solid var(--navy2)}
+  .tagfoot .t{font-family:var(--serif);font-size:13px;font-style:italic;color:var(--gold);line-height:1.4}
+  .tagfoot .l{font-size:10.5px;color:#5D6B85;margin-top:8px}
+
+  /* main */
+  main{flex:1;min-width:0}
+  header.top{background:var(--card);border-bottom:1px solid var(--line);padding:20px 32px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+  .crumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint);margin-bottom:3px}
+  header.top h1{font-family:var(--serif);font-size:24px;font-weight:500;color:var(--navy);margin:0}
+  .date .d{font-size:13px;font-weight:600;color:var(--ink)}
+  .date .s{font-size:12px;color:var(--muted);text-align:right}
+  .wrap{padding:32px;max-width:1240px;margin:0 auto}
+
+  /* primitives */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:0 1px 2px rgba(11,30,63,.04)}
+  .grid{display:grid;gap:16px}
+  .stat{padding:20px;position:relative;overflow:hidden}
+  .stat .accent{position:absolute;top:0;left:0;width:4px;height:100%}
+  .stat .row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .stat .lab{font-size:12.5px;font-weight:600;color:var(--muted);max-width:150px;line-height:1.3}
+  .stat .ico{width:34px;height:34px;border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center}
+  .stat .ico svg{width:17px;height:17px;stroke:var(--navy2)}
+  .stat .val{font-family:var(--serif);font-size:32px;font-weight:500;color:var(--navy);line-height:1}
+  .stat .subv{font-size:12px;color:var(--faint);margin-top:8px}
+
+  .seclab{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .seclab svg{width:16px;height:16px;stroke:var(--gold)}
+  .seclab span{font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+
+  .badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.2px;white-space:nowrap;display:inline-block}
+  .b-ontrack{background:var(--greenSoft);color:var(--green)}
+  .b-delayed{background:var(--amberSoft);color:var(--amber)}
+  .b-completed{background:var(--goldSoft);color:#8A6D2A}
+
+  .prog{background:#ECE8DE;border-radius:999px;height:8px;overflow:hidden;width:100%}
+  .prog>i{display:block;height:100%;border-radius:999px;transition:width .5s ease}
+
+  .filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .fbtn{font-size:13px;font-weight:600;padding:8px 16px;border-radius:999px;border:1px solid var(--line);cursor:pointer;background:var(--card);color:var(--muted);transition:all .2s}
+  .fbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+  .pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s ease;box-shadow:0 1px 2px rgba(11,30,63,.04)}
+  .pcard:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(11,30,63,.10)}
+  .pcard .strip{height:6px}
+  .pcard .body{padding:20px}
+  .prow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .pname{font-family:var(--serif);font-size:18px;color:var(--navy);line-height:1.2;font-weight:500}
+  .metaline{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:4px}
+  .metaline svg{width:13px;height:13px;stroke:var(--gold)}
+  .kv2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+  .kv .kl{font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--faint)}
+  .kv .kvv{font-family:var(--serif);font-size:16px;color:var(--navy)}
+  .kv .kvt{font-size:12.5px;color:var(--ink);font-weight:500}
+
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);font-weight:700;padding:0 12px 12px}
+  td{padding:12px;font-size:12.5px;color:var(--muted)}
+  tr+tr td,tbody tr{border-top:1px solid var(--line)}
+  .tblwrap{overflow-x:auto}
+
+  input,textarea,select{width:100%;font-size:13.5px;color:var(--ink);padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);outline:none}
+  textarea{resize:vertical}
+  label.fl{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:5px}
+  .field{margin-bottom:14px}
+  .submit{width:100%;font-size:14px;font-weight:700;color:#fff;background:var(--navy);border:none;border-radius:10px;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+  .okmsg{margin-top:12px;font-size:13px;font-weight:600;color:var(--green);background:var(--greenSoft);padding:10px 14px;border-radius:9px;display:flex;align-items:center;gap:8px}
+
+  .backbtn{display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);padding:0;width:fit-content}
+  .backbtn svg{width:16px;height:16px;stroke:var(--muted)}
+
+  .cols{display:grid;gap:22px}
+  @media(max-width:900px){.sidebar{display:none}.cols,.grid{grid-template-columns:1fr!important}}
+
+  .avatar{width:38px;height:38px;border-radius:999px;background:var(--navy);color:var(--gold);font-family:var(--serif);font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .taskchip{cursor:pointer;border:none;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:999px}
+  .chip-todo{background:var(--bg);color:var(--muted)}
+  .chip-prog{background:var(--goldSoft);color:#8A6D2A}
+  .chip-done{background:var(--greenSoft);color:var(--green)}
+  .pill{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px}
+  .pill b{color:var(--faint);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">P</div>
+      <div>
+        <div class="name">Prime Groove</div>
+        <div class="sub">Construction Ltd</div>
+      </div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="tagfoot">
+      <div class="t">Excellence in<br/>Every Detail.</div>
+      <div class="l">Jahi, Abuja · Kano</div>
+    </div>
+  </aside>
+  <main>
+    <header class="top">
+      <div>
+        <div class="crumb" id="crumb"><span>Dashboard</span></div>
+        <h1 id="title">Overview Dashboard</h1>
+      </div>
+      <div class="date">
+        <div class="d" id="today"></div>
+        <div class="s">Project Command Centre</div>
+      </div>
+    </header>
+    <div class="wrap" id="view"></div>
+  </main>
+</div>
+
+<script>
+/* ============================ ICONS ============================ */
+const I = {
+  dash:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+  building:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4"/><path d="M18 9h2a2 2 0 0 1 2 2v11h-4"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>',
+  file:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h8M8 17h6"/></svg>',
+  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M17 13h.01"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 19a6 6 0 0 0-12 0"/><circle cx="8" cy="9" r="4"/><path d="M22 19a6 6 0 0 0-6-6 4 4 0 1 0 0-8"/></svg>',
+  trend:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg>',
+  alert:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  clip:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m12 19-7-7 7-7M19 12H5"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  hat:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M2 18v-2a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2"/><path d="M10 10V6a2 2 0 0 1 4 0v4"/><path d="M6 14v-3a6 6 0 0 1 12 0v3"/></svg>',
+  pkg:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m7.5 4.3 9 5.2M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>',
+  act:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  bank:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>',
+};
+function icon(name,stroke){return I[name]?I[name].replace('<svg','<svg style="stroke:'+(stroke||'currentColor')+'"'):''}
+
+/* ============================ HELPERS ============================ */
+const nairaM = n => '₦'+Number(n).toLocaleString('en-NG',{maximumFractionDigits:1})+'M';
+const naira  = n => '₦'+Number(n).toLocaleString('en-NG');
+function statusClass(s){return s==='On Track'?'b-ontrack':s==='Delayed'?'b-delayed':'b-completed'}
+function statusColor(s){return s==='On Track'?'var(--green)':s==='Delayed'?'var(--amber)':'var(--gold)'}
+function badge(s){return '<span class="badge '+statusClass(s)+'">'+s+'</span>'}
+function progressBar(v,h){h=h||8;const c=v>=100?'var(--gold)':v<50?'var(--orange)':'var(--navy2)';
+  return '<div class="prog" style="height:'+h+'px"><i style="width:'+v+'%;background:'+c+'"></i></div>'}
+function seclab(ic,txt){return '<div class="seclab">'+icon(ic,'var(--gold)')+'<span>'+txt+'</span></div>'}
+function stat(ic,val,lab,sub,acc){
+  return '<div class="card stat"><div class="accent" style="background:'+(acc||'var(--gold)')+'"></div>'+
+    '<div class="row"><span class="lab">'+lab+'</span><span class="ico">'+icon(ic,'var(--navy2)')+'</span></div>'+
+    '<div class="val">'+val+'</div>'+(sub?'<div class="subv">'+sub+'</div>':'')+'</div>'}
+
+/* ============================ DATA ============================ */
+const PROJECTS = [{"id": "sapz", "name": "SAPZ Garun Mallam Access Road", "location": "Garun Mallam, Kano", "client": "Kano State / SAPZ Programme", "contractor": "Prime Groove Construction Ltd", "start": "12 Feb 2026", "end": "30 Nov 2026", "budget": 42, "spent": 24.6, "progress": 62, "status": "On Track", "manager": "Fatima Bello", "engineer": "Musa Danjuma", "description": "Design and construction of a 6.4 km bituminous access road connecting the Garun Mallam SAPZ cluster to the Kano–Zaria highway, including drainage, culverts and road furniture.", "milestones": [{"name": "Site clearing & setting out", "date": "Feb 2026", "done": true}, {"name": "Earthworks & sub-grade", "date": "Apr 2026", "done": true}, {"name": "Sub-base & base course", "date": "Jul 2026", "done": true}, {"name": "Asphalt binder course", "date": "Sep 2026", "done": false}, {"name": "Wearing course & handover", "date": "Nov 2026", "done": false}], "tasks": [{"name": "Culvert casting — Ch. 3+200", "assignee": "Musa Danjuma", "due": "24 Jul", "status": "In Progress"}, {"name": "Base course compaction test", "assignee": "Mahmud Akram Nura", "due": "22 Jul", "status": "To Do"}, {"name": "July valuation certificate", "assignee": "Ibrahim Isa Ayuba", "due": "28 Jul", "status": "To Do"}], "updates": [{"date": "18 Jul 2026", "text": "Sub-base completed to Ch. 4+800; compaction results within spec."}, {"date": "14 Jul 2026", "text": "Two box culverts cast at Ch. 2+100 and Ch. 3+200."}], "materials": [{"name": "Granite sub-base", "qty": "1,240 m³", "cost": 8.2}, {"name": "Bitumen (60/70)", "qty": "84 tonnes", "cost": 6.1}, {"name": "Reinforcement steel", "qty": "12 tonnes", "cost": 3.4}], "risks": [{"level": "Medium", "text": "Rainy-season access to borrow pit may slow aggregate haulage."}, {"level": "Low", "text": "Community land clarification pending at Ch. 5+400."}], "breakdown": [{"item": "Earthworks & drainage", "amount": 11.5}, {"item": "Pavement layers", "amount": 18.0}, {"item": "Culverts & structures", "amount": 7.5}, {"item": "Road furniture & signage", "amount": 5.0}]}, {"id": "gwarzo", "name": "GSS Gwarzo Renovation", "location": "Gwarzo, Kano", "client": "Kano State Ministry of Education", "contractor": "Prime Groove Construction Ltd", "start": "06 Jan 2026", "end": "15 Aug 2026", "budget": 28, "spent": 20.4, "progress": 78, "status": "On Track", "manager": "Fatima Bello", "engineer": "Yusuf Aliyu", "description": "Comprehensive rehabilitation of classroom blocks A–E, administrative block, dining hall and hostels, including roofing, plastering, electrical and water reticulation.", "milestones": [{"name": "Structural repairs", "date": "Feb 2026", "done": true}, {"name": "Roofing & ceilings", "date": "Apr 2026", "done": true}, {"name": "Electrical & plumbing", "date": "Jun 2026", "done": true}, {"name": "Finishes & painting", "date": "Jul 2026", "done": false}, {"name": "Furniture & handover", "date": "Aug 2026", "done": false}], "tasks": [{"name": "Snag list — Block C", "assignee": "Yusuf Aliyu", "due": "23 Jul", "status": "In Progress"}, {"name": "External painting", "assignee": "Yusuf Aliyu", "due": "30 Jul", "status": "To Do"}], "updates": [{"date": "16 Jul 2026", "text": "Blocks A & B fully finished and handed to site QA."}, {"date": "09 Jul 2026", "text": "Borehole tank stand erected; plumbing pressure-tested."}], "materials": [{"name": "Long-span roofing sheets", "qty": "620 m²", "cost": 4.2}, {"name": "Emulsion & gloss paint", "qty": "180 buckets", "cost": 2.1}], "risks": [{"level": "Low", "text": "Furniture delivery lead time may affect handover date."}], "breakdown": [{"item": "Structure & roofing", "amount": 10.2}, {"item": "M&E services", "amount": 6.0}, {"item": "Finishes", "amount": 5.6}, {"item": "Furniture", "amount": 2.2}]}, {"id": "kabo", "name": "GSS Kabo Renovation", "location": "Kabo, Kano", "client": "Kano State Ministry of Education", "contractor": "Prime Groove Construction Ltd", "start": "20 Jan 2026", "end": "10 Sep 2026", "budget": 26, "spent": 17.1, "progress": 71, "status": "On Track", "manager": "Fatima Bello", "engineer": "Musa Danjuma", "description": "Renovation of classroom blocks, hostel wings and the school gate house, with new solar-assisted lighting and rainwater drainage across the compound.", "milestones": [{"name": "Demolition & structural", "date": "Feb 2026", "done": true}, {"name": "Roofing", "date": "May 2026", "done": true}, {"name": "Solar & electrical", "date": "Jul 2026", "done": false}, {"name": "Finishes & handover", "date": "Sep 2026", "done": false}], "tasks": [{"name": "Solar array mounting", "assignee": "Umar Marshal Usman", "due": "25 Jul", "status": "In Progress"}, {"name": "Hostel wing plastering", "assignee": "Musa Danjuma", "due": "29 Jul", "status": "To Do"}], "updates": [{"date": "15 Jul 2026", "text": "Gate house roof completed; solar mounts being set."}], "materials": [{"name": "Solar panels (450W)", "qty": "40 units", "cost": 5.6}], "risks": [{"level": "Medium", "text": "Solar inverter shipment delayed at port; monitoring weekly."}], "breakdown": [{"item": "Structure & roofing", "amount": 8.4}, {"item": "Solar & electrical", "amount": 5.6}, {"item": "Finishes", "amount": 3.1}]}, {"id": "alu", "name": "Alu Avenue Recreation & Wellness Park", "location": "Alu Avenue, Kano", "client": "Prime Groove (PPP)", "contractor": "Prime Groove Construction Ltd", "start": "01 Mar 2026", "end": "20 Dec 2026", "budget": 38, "spent": 15.8, "progress": 45, "status": "Delayed", "manager": "Fatima Bello", "engineer": "Yusuf Aliyu", "description": "Development of a family recreation and wellness park with landscaped gardens, a wellness pavilion, children's play area, walkways and a service block.", "milestones": [{"name": "Site grading & layout", "date": "Mar 2026", "done": true}, {"name": "Pavilion substructure", "date": "May 2026", "done": true}, {"name": "Pavilion superstructure", "date": "Aug 2026", "done": false}, {"name": "Landscaping & handover", "date": "Dec 2026", "done": false}], "tasks": [{"name": "Pavilion column casting", "assignee": "Yusuf Aliyu", "due": "26 Jul", "status": "To Do"}, {"name": "Revised programme submission", "assignee": "Fatima Bello", "due": "21 Jul", "status": "In Progress"}], "updates": [{"date": "12 Jul 2026", "text": "Delay flagged: funding tranche 2 awaited; superstructure paused."}], "materials": [{"name": "Cement (50kg)", "qty": "1,100 bags", "cost": 3.9}], "risks": [{"level": "High", "text": "Second funding tranche delayed — 3-week slip on superstructure."}, {"level": "Medium", "text": "Wet-season landscaping window narrowing."}], "breakdown": [{"item": "Earthworks & site prep", "amount": 6.2}, {"item": "Pavilion structure", "amount": 5.4}, {"item": "Play area & walkways", "amount": 4.2}]}, {"id": "foodpark", "name": "Kano Food & Lifestyle Park", "location": "Lodge Road, Kano", "client": "Reem Foods Ltd (PPP)", "contractor": "Prime Groove Construction Ltd", "start": "10 Mar 2026", "end": "15 Jan 2027", "budget": 45, "spent": 17.2, "progress": 40, "status": "Delayed", "manager": "Fatima Bello", "engineer": "Musa Danjuma", "description": "Mixed-use food and lifestyle park comprising retail food courts, a central plaza, parking, and utility infrastructure on Lodge Road.", "milestones": [{"name": "Site possession & survey", "date": "Mar 2026", "done": true}, {"name": "Foundations — Block A", "date": "Jun 2026", "done": true}, {"name": "Retail superstructure", "date": "Sep 2026", "done": false}, {"name": "Fit-out & commissioning", "date": "Jan 2027", "done": false}], "tasks": [{"name": "Block A ground beams", "assignee": "Mahmud Akram Nura", "due": "27 Jul", "status": "To Do"}, {"name": "Utility trench survey", "assignee": "Musa Danjuma", "due": "24 Jul", "status": "In Progress"}], "updates": [{"date": "11 Jul 2026", "text": "Delay: design revision to food-court layout under client review."}], "materials": [{"name": "Reinforcement steel", "qty": "18 tonnes", "cost": 5.1}], "risks": [{"level": "High", "text": "Client-side design revision holding superstructure start."}], "breakdown": [{"item": "Substructure", "amount": 7.1}, {"item": "External works", "amount": 5.4}, {"item": "Utilities", "amount": 4.7}]}, {"id": "jahi", "name": "Jahi Office Complex", "location": "Jahi, Abuja", "client": "Prime Groove Construction Ltd", "contractor": "Prime Groove Construction Ltd", "start": "15 Jan 2026", "end": "30 Oct 2026", "budget": 34, "spent": 16.4, "progress": 55, "status": "On Track", "manager": "Fatima Bello", "engineer": "Yusuf Aliyu", "description": "Construction of a three-storey corporate office complex for Prime Groove headquarters operations in Jahi, Abuja.", "milestones": [{"name": "Substructure", "date": "Mar 2026", "done": true}, {"name": "Frame to roof level", "date": "Jul 2026", "done": true}, {"name": "Blockwork & M&E", "date": "Sep 2026", "done": false}, {"name": "Finishes & handover", "date": "Oct 2026", "done": false}], "tasks": [{"name": "First-floor slab strike", "assignee": "Yusuf Aliyu", "due": "23 Jul", "status": "In Progress"}, {"name": "M&E first fix — GF", "assignee": "Yusuf Aliyu", "due": "31 Jul", "status": "To Do"}], "updates": [{"date": "17 Jul 2026", "text": "Roof-level frame completed; blockwork starting on ground floor."}], "materials": [{"name": "Ready-mix concrete", "qty": "310 m³", "cost": 6.2}], "risks": [{"level": "Low", "text": "Curtain-wall glazing lead time to be confirmed with supplier."}], "breakdown": [{"item": "Substructure & frame", "amount": 9.8}, {"item": "Blockwork & M&E", "amount": 4.3}, {"item": "Finishes", "amount": 2.3}]}, {"id": "sultan", "name": "Sultan Road Commercial Block", "location": "Sultan Road, Kano", "client": "Private Developer", "contractor": "Prime Groove Construction Ltd", "start": "05 Feb 2026", "end": "18 Sep 2026", "budget": 22, "spent": 11.2, "progress": 58, "status": "On Track", "manager": "Fatima Bello", "engineer": "Musa Danjuma", "description": "A two-storey commercial retail block with ground-floor shops and first-floor offices along Sultan Road.", "milestones": [{"name": "Foundations", "date": "Mar 2026", "done": true}, {"name": "Ground & first floor", "date": "Jun 2026", "done": true}, {"name": "Roofing & finishes", "date": "Sep 2026", "done": false}], "tasks": [{"name": "First-floor blockwork", "assignee": "Musa Danjuma", "due": "28 Jul", "status": "To Do"}], "updates": [{"date": "13 Jul 2026", "text": "First-floor slab cured; blockwork commencing."}], "materials": [{"name": "Sandcrete blocks", "qty": "9,400 units", "cost": 2.8}], "risks": [{"level": "Low", "text": "No active risks flagged this period."}], "breakdown": [{"item": "Substructure", "amount": 4.6}, {"item": "Superstructure", "amount": 4.4}, {"item": "Finishes", "amount": 2.2}]}, {"id": "reem", "name": "Reem Foods Processing Facility", "location": "Sharada, Kano", "client": "Reem Foods Ltd", "contractor": "Prime Groove Construction Ltd", "start": "22 Feb 2026", "end": "05 Dec 2026", "budget": 30, "spent": 14.3, "progress": 52, "status": "On Track", "manager": "Fatima Bello", "engineer": "Mahmud Akram Nura", "description": "A light-industrial food processing and packaging facility with production hall, cold store, admin wing and loading bays.", "milestones": [{"name": "Foundations & floor slab", "date": "Apr 2026", "done": true}, {"name": "Steel portal frame", "date": "Jun 2026", "done": true}, {"name": "Cladding & cold store", "date": "Sep 2026", "done": false}, {"name": "Fit-out & handover", "date": "Dec 2026", "done": false}], "tasks": [{"name": "Portal frame bracing", "assignee": "Mahmud Akram Nura", "due": "25 Jul", "status": "In Progress"}, {"name": "Cold-store panel order", "assignee": "Umar Marshal Usman", "due": "30 Jul", "status": "To Do"}], "updates": [{"date": "14 Jul 2026", "text": "Steel portal frame erected; cladding procurement underway."}], "materials": [{"name": "Steel portal sections", "qty": "22 tonnes", "cost": 6.4}], "risks": [{"level": "Medium", "text": "Cold-store panel import subject to FX and clearance timing."}], "breakdown": [{"item": "Substructure & slab", "amount": 5.2}, {"item": "Steel frame", "amount": 6.4}, {"item": "Cladding & services", "amount": 2.7}]}, {"id": "bompai", "name": "Bompai Road Drainage Works", "location": "Bompai, Kano", "client": "Kano State Ministry of Works", "contractor": "Prime Groove Construction Ltd", "start": "18 Jan 2026", "end": "12 Aug 2026", "budget": 19, "spent": 11.0, "progress": 66, "status": "On Track", "manager": "Fatima Bello", "engineer": "Yusuf Aliyu", "description": "Construction of 3.1 km of reinforced-concrete lined drainage and cross culverts to relieve flooding along the Bompai industrial corridor.", "milestones": [{"name": "Excavation", "date": "Feb 2026", "done": true}, {"name": "Blinding & reinforcement", "date": "Apr 2026", "done": true}, {"name": "Channel casting", "date": "Jul 2026", "done": false}, {"name": "Backfill & reinstatement", "date": "Aug 2026", "done": false}], "tasks": [{"name": "Channel casting — Ch. 1+900", "assignee": "Yusuf Aliyu", "due": "26 Jul", "status": "In Progress"}], "updates": [{"date": "15 Jul 2026", "text": "Reinforced channel cast to Ch. 1+700; on programme."}], "materials": [{"name": "Concrete (Grade 25)", "qty": "480 m³", "cost": 4.9}], "risks": [{"level": "Low", "text": "Traffic management during casting coordinated with FRSC."}], "breakdown": [{"item": "Excavation", "amount": 3.6}, {"item": "RC channel", "amount": 5.3}, {"item": "Culverts", "amount": 2.1}]}, {"id": "zaria", "name": "Zaria Road Estate Phase 1", "location": "Zaria Road, Kano", "client": "Private Developer", "contractor": "Prime Groove Construction Ltd", "start": "2025", "end": "May 2026", "budget": 36, "spent": 35.2, "progress": 100, "status": "Completed", "manager": "Fatima Bello", "engineer": "Musa Danjuma", "description": "Phase 1 of a residential estate: 18 semi-detached units with shared infrastructure.", "milestones": [{"name": "Handover complete", "date": "May 2026", "done": true}], "tasks": [], "updates": [{"date": "May 2026", "text": "Estate Phase 1 handed over to client; defects liability underway."}], "materials": [], "risks": [{"level": "Low", "text": "In defects-liability period."}], "breakdown": [{"item": "Construction", "amount": 35.2}]}, {"id": "buk", "name": "Bayero University Access Works", "location": "BUK, Kano", "client": "Bayero University", "contractor": "Prime Groove Construction Ltd", "start": "2025", "end": "Apr 2026", "budget": 21, "spent": 20.4, "progress": 100, "status": "Completed", "manager": "Fatima Bello", "engineer": "Yusuf Aliyu", "description": "Internal access roads and parking within the university campus.", "milestones": [{"name": "Handover complete", "date": "Apr 2026", "done": true}], "tasks": [], "updates": [{"date": "Apr 2026", "text": "Access works completed and certified."}], "materials": [], "risks": [{"level": "Low", "text": "Closed out."}], "breakdown": [{"item": "Roadworks", "amount": 20.4}]}, {"id": "nassarawa", "name": "Nassarawa GRA Villa", "location": "Nassarawa GRA, Kano", "client": "Private Client", "contractor": "Prime Groove Construction Ltd", "start": "2025", "end": "Mar 2026", "budget": 29, "spent": 28.6, "progress": 100, "status": "Completed", "manager": "Fatima Bello", "engineer": "Mahmud Akram Nura", "description": "A luxury four-bedroom villa with landscaped grounds.", "milestones": [{"name": "Handover complete", "date": "Mar 2026", "done": true}], "tasks": [], "updates": [{"date": "Mar 2026", "text": "Villa handed over; client sign-off received."}], "materials": [], "risks": [{"level": "Low", "text": "Closed out."}], "breakdown": [{"item": "Construction", "amount": 28.6}]}];
+const TEAM = [{"name": "Dr. Shehu Usman Shehu", "role": "Chairman", "dept": "Governance", "initials": "SS"}, {"name": "Arc. Lawal Yusuf", "role": "Managing Director", "dept": "Governance", "initials": "LY"}, {"name": "Fatima Bello", "role": "Project Manager", "dept": "Projects", "initials": "FB"}, {"name": "Arc. Mohammed Sagir Kabir", "role": "Chief Architect", "dept": "Architecture", "initials": "MK"}, {"name": "Mahmud Akram Nura", "role": "Structural Engineer", "dept": "Engineering", "initials": "MN"}, {"name": "Musa Danjuma", "role": "Site Engineer", "dept": "Engineering", "initials": "MD"}, {"name": "Yusuf Aliyu", "role": "Site Engineer", "dept": "Engineering", "initials": "YA"}, {"name": "Umar Marshal Usman", "role": "Intern Engineer", "dept": "Engineering", "initials": "UU"}, {"name": "Ibrahim Isa Ayuba", "role": "Quantity Surveyor", "dept": "Finance", "initials": "IA"}, {"name": "Abdulzahir Abdullahi Liman", "role": "Director, Administration & HR", "dept": "Admin & HR", "initials": "AA"}, {"name": "Aisha Abdullahi Liman", "role": "Administrative Assistant", "dept": "Admin & HR", "initials": "AL"}, {"name": "Ogar Faith Anani", "role": "Secretary / Receptionist", "dept": "Admin & HR", "initials": "OA"}];
+let TASKS = [{"name": "July valuation certificate — SAPZ", "assignee": "Ibrahim Isa Ayuba", "project": "SAPZ Garun Mallam", "due": "28 Jul", "status": "To Do"}, {"name": "Base course compaction test", "assignee": "Mahmud Akram Nura", "project": "SAPZ Garun Mallam", "due": "22 Jul", "status": "To Do"}, {"name": "Snag list — Block C", "assignee": "Yusuf Aliyu", "project": "GSS Gwarzo", "due": "23 Jul", "status": "In Progress"}, {"name": "Solar array mounting", "assignee": "Umar Marshal Usman", "project": "GSS Kabo", "due": "25 Jul", "status": "In Progress"}, {"name": "Revised programme submission", "assignee": "Fatima Bello", "project": "Alu Avenue Park", "due": "21 Jul", "status": "In Progress"}, {"name": "Pavilion column casting", "assignee": "Yusuf Aliyu", "project": "Alu Avenue Park", "due": "26 Jul", "status": "To Do"}, {"name": "Block A ground beams", "assignee": "Mahmud Akram Nura", "project": "Food & Lifestyle Park", "due": "27 Jul", "status": "To Do"}, {"name": "First-floor slab strike", "assignee": "Yusuf Aliyu", "project": "Jahi Office Complex", "due": "23 Jul", "status": "In Progress"}, {"name": "Portal frame bracing", "assignee": "Mahmud Akram Nura", "project": "Reem Foods Facility", "due": "25 Jul", "status": "In Progress"}, {"name": "Channel casting — Ch. 1+900", "assignee": "Yusuf Aliyu", "project": "Bompai Drainage", "due": "26 Jul", "status": "In Progress"}, {"name": "Cold-store panel order", "assignee": "Umar Marshal Usman", "project": "Reem Foods Facility", "due": "30 Jul", "status": "To Do"}, {"name": "Site diary compilation", "assignee": "Aisha Abdullahi Liman", "project": "All projects", "due": "31 Jul", "status": "To Do"}, {"name": "Sign new appointment-letter batch", "assignee": "Abdulzahir Abdullahi Liman", "project": "Admin & HR", "due": "23 Jul", "status": "In Progress"}, {"name": "Approve HSE policy for issue", "assignee": "Abdulzahir Abdullahi Liman", "project": "Company-wide", "due": "25 Jul", "status": "To Do"}, {"name": "Review Q3 HR readiness report", "assignee": "Abdulzahir Abdullahi Liman", "project": "Admin & HR", "due": "29 Jul", "status": "To Do"}, {"name": "Chair monthly admin & HR review", "assignee": "Abdulzahir Abdullahi Liman", "project": "Admin & HR", "due": "31 Jul", "status": "To Do"}, {"name": "Prepare onboarding packs — new hires", "assignee": "Aisha Abdullahi Liman", "project": "Admin & HR", "due": "24 Jul", "status": "In Progress"}, {"name": "Draft internal memo — PGC/HR/MEM/2026/006", "assignee": "Aisha Abdullahi Liman", "project": "Admin & HR", "due": "26 Jul", "status": "To Do"}, {"name": "Update August social media calendar", "assignee": "Aisha Abdullahi Liman", "project": "Admin & HR", "due": "28 Jul", "status": "To Do"}];
+const MONTHLY = [{m:'Jan',s:12},{m:'Feb',s:15},{m:'Mar',s:18},{m:'Apr',s:16},{m:'May',s:21},{m:'Jun',s:19},{m:'Jul',s:24},{m:'Aug',s:23}];
+const PAYMENTS = [{"ref": "PGC/PAY/2026/041", "to": "Aggregate Haulage Ltd", "project": "SAPZ Garun Mallam", "amount": 4200000, "date": "10 Jul 2026", "status": "Paid"}, {"ref": "PGC/PAY/2026/042", "to": "Northern Steel & Metals", "project": "Reem Foods Facility", "amount": 6400000, "date": "08 Jul 2026", "status": "Paid"}, {"ref": "PGC/PAY/2026/043", "to": "SolarGrid Nigeria", "project": "GSS Kabo", "amount": 5600000, "date": "15 Jul 2026", "status": "Pending"}, {"ref": "PGC/PAY/2026/044", "to": "Kano Ready-Mix", "project": "Jahi Office Complex", "amount": 6200000, "date": "16 Jul 2026", "status": "Pending"}, {"ref": "PGC/PAY/2026/045", "to": "Bituminous Works Ltd", "project": "SAPZ Garun Mallam", "amount": 6100000, "date": "18 Jul 2026", "status": "Scheduled"}];
+let REPORTS = [{"id": 2, "project": "GSS Gwarzo Renovation", "date": "16 Jul 2026", "work": "Completed external painting on Blocks A and B. QA inspection passed.", "workers": "22", "equipment": "Scaffold, sprayers", "materials": "180 buckets emulsion", "problems": ""}, {"id": 1, "project": "SAPZ Garun Mallam Access Road", "date": "18 Jul 2026", "work": "Sub-base laid and compacted to Ch. 4+800. Density tests within specification.", "workers": "31", "equipment": "Grader, roller, water bowser", "materials": "1,240 m³ granite sub-base", "problems": "Borrow-pit access slowed by morning rain; haulage resumed by midday."}];
+
+const activeP = PROJECTS.filter(p=>p.status!=='Completed');
+const completedP = PROJECTS.filter(p=>p.status==='Completed');
+const delayedP = PROJECTS.filter(p=>p.status==='Delayed');
+const totalBudget = activeP.reduce((a,p)=>a+p.budget,0);
+const totalSpent = activeP.reduce((a,p)=>a+p.spent,0);
+const avgComp = Math.round(activeP.reduce((a,p)=>a+p.progress,0)/activeP.length);
+
+/* ============================ CHARTS (SVG) ============================ */
+function areaChart(data,color){
+  const W=600,H=240,pl=42,pr=14,pt=12,pb=28,pw=W-pl-pr,ph=H-pt-pb;
+  const max=Math.max.apply(null,data.map(d=>d.s))*1.15;
+  const x=i=>pl+(data.length===1?pw/2:i*pw/(data.length-1));
+  const y=v=>pt+ph*(1-v/max);
+  let grid='',yl='';for(let g=0;g<=4;g++){const gy=pt+ph*g/4;const gv=Math.round(max*(1-g/4));
+    grid+='<line x1="'+pl+'" y1="'+gy+'" x2="'+(W-pr)+'" y2="'+gy+'" stroke="var(--line)"/>';
+    yl+='<text x="'+(pl-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--sans)">'+gv+'</text>'}
+  let line='',pts=data.map((d,i)=>x(i)+','+y(d.s));
+  line='M'+pts.join(' L');
+  const area=line+' L'+x(data.length-1)+','+(pt+ph)+' L'+x(0)+','+(pt+ph)+' Z';
+  let dots='',xl='';data.forEach((d,i)=>{dots+='<circle cx="'+x(i)+'" cy="'+y(d.s)+'" r="3" fill="var(--navy)"/>';
+    xl+='<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--sans)">'+d.m+'</text>'});
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+color+'" stop-opacity="0.35"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0.02"/></linearGradient></defs>'+
+    grid+yl+'<path d="'+area+'" fill="url(#ag)"/><path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="2.5"/>'+dots+xl+'</svg>'}
+
+function lineChart(data,color){
+  const W=600,H=240,pl=42,pr=14,pt=12,pb=28,pw=W-pl-pr,ph=H-pt-pb;
+  const max=Math.max.apply(null,data.map(d=>d.v))*1.1;
+  const x=i=>pl+i*pw/(data.length-1),y=v=>pt+ph*(1-v/max);
+  let grid='',yl='';for(let g=0;g<=4;g++){const gy=pt+ph*g/4;const gv=Math.round(max*(1-g/4));
+    grid+='<line x1="'+pl+'" y1="'+gy+'" x2="'+(W-pr)+'" y2="'+gy+'" stroke="var(--line)"/>';
+    yl+='<text x="'+(pl-8)+'" y="'+(gy+3)+'" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--sans)">'+gv+'</text>'}
+  const line='M'+data.map((d,i)=>x(i)+','+y(d.v)).join(' L');
+  let dots='',xl='';data.forEach((d,i)=>{dots+='<circle cx="'+x(i)+'" cy="'+y(d.v)+'" r="3" fill="var(--gold)"/>';
+    xl+='<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--sans)">'+d.m+'</text>'});
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+grid+yl+'<path d="'+line+'" fill="none" stroke="'+color+'" stroke-width="3"/>'+dots+xl+'</svg>'}
+
+function groupedBar(data){
+  const W=600,H=260,pl=36,pr=14,pt=12,pb=34,pw=W-pl-pr,ph=H-pt-pb;
+  const max=Math.max.apply(null,data.map(d=>Math.max(d.budget,d.spent)))*1.15;
+  const y=v=>pt+ph*(1-v/max),h=v=>ph*v/max;
+  const slot=pw/data.length,bw=16;
+  let grid='';for(let g=0;g<=4;g++){const gy=pt+ph*g/4;grid+='<line x1="'+pl+'" y1="'+gy+'" x2="'+(W-pr)+'" y2="'+gy+'" stroke="var(--line)"/>'}
+  let bars='',xl='';data.forEach((d,i)=>{const cx=pl+slot*i+slot/2;
+    bars+='<rect x="'+(cx-bw-2)+'" y="'+y(d.budget)+'" width="'+bw+'" height="'+h(d.budget)+'" rx="4" fill="var(--navy2)"/>';
+    bars+='<rect x="'+(cx+2)+'" y="'+y(d.spent)+'" width="'+bw+'" height="'+h(d.spent)+'" rx="4" fill="var(--gold)"/>';
+    xl+='<text x="'+cx+'" y="'+(H-14)+'" text-anchor="middle" font-size="10" fill="var(--ink)" font-family="var(--sans)">'+d.name+'</text>'});
+  const legend='<g font-family="var(--sans)" font-size="11"><circle cx="'+(pl)+'" cy="'+(H-2)+'" r="4" fill="var(--navy2)"/><text x="'+(pl+9)+'" y="'+(H+1)+'" fill="var(--muted)">Budget</text>'+
+    '<circle cx="'+(pl+80)+'" cy="'+(H-2)+'" r="4" fill="var(--gold)"/><text x="'+(pl+89)+'" y="'+(H+1)+'" fill="var(--muted)">Spent</text></g>';
+  return '<svg viewBox="0 0 '+W+' '+(H+6)+'" style="width:100%;height:auto">'+grid+bars+xl+legend+'</svg>'}
+
+function varianceChart(data){
+  const W=600,H=240,pl=36,pr=14,pt=12,pb=40,pw=W-pl-pr,ph=H-pt-pb;
+  const max=Math.max.apply(null,data.map(d=>Math.abs(d.v)))*1.2||1;
+  const zero=pt+ph/2,scale=(ph/2)/max;
+  const slot=pw/data.length,bw=20;
+  let bars='',xl='';data.forEach((d,i)=>{const cx=pl+slot*i+slot/2;const bh=Math.abs(d.v)*scale;
+    const yTop=d.v>=0?zero-bh:zero;
+    bars+='<rect x="'+(cx-bw/2)+'" y="'+yTop+'" width="'+bw+'" height="'+Math.max(bh,1)+'" rx="3" fill="'+(d.v>=0?'var(--green)':'var(--red)')+'"/>';
+    xl+='<text x="'+cx+'" y="'+(H-8)+'" text-anchor="middle" font-size="9.5" fill="var(--ink)" font-family="var(--sans)">'+d.name+'</text>'});
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto"><line x1="'+pl+'" y1="'+zero+'" x2="'+(W-pr)+'" y2="'+zero+'" stroke="var(--faint)" stroke-dasharray="3 3"/>'+bars+xl+'</svg>'}
+
+/* ============================ VIEWS ============================ */
+function vOverview(){
+  const upcoming=[
+    {p:'Alu Avenue Park',t:'Revised programme submission',due:'21 Jul 2026',d:4},
+    {p:'SAPZ Garun Mallam',t:'Base course compaction test',due:'22 Jul 2026',d:5},
+    {p:'Jahi Office Complex',t:'First-floor slab strike',due:'23 Jul 2026',d:6},
+    {p:'GSS Gwarzo',t:'Snag list — Block C',due:'23 Jul 2026',d:6},
+    {p:'GSS Kabo',t:'Solar array mounting',due:'25 Jul 2026',d:8}];
+  const feed=[];PROJECTS.forEach(p=>p.updates.forEach(u=>feed.push({t:u.text,d:u.date,p:p.name})));
+  const bva=activeP.slice(0,6).map(p=>({name:p.name.split(' ')[0],budget:p.budget,spent:p.spent}));
+
+  let progRows='';activeP.forEach(p=>{const short=p.name.split(' ').slice(0,3).join(' ');
+    progRows+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:11px">'+
+      '<div style="width:130px;font-size:12px;color:var(--ink);flex-shrink:0">'+short+'</div>'+
+      '<div style="flex:1">'+progressBar(p.progress,15)+'</div>'+
+      '<div style="width:38px;text-align:right;font-size:12px;font-weight:700;color:var(--navy)">'+p.progress+'%</div></div>'});
+
+  return ''+
+  '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:22px">'+
+    stat('building','9','Active projects',completedP.length+' completed this year','var(--navy2)')+
+    stat('bank',nairaM(totalSpent),'Total spent','of '+nairaM(totalBudget)+' committed budget','var(--gold)')+
+    stat('trend',avgComp+'%','Average completion','across active projects','var(--green)')+
+    stat('clip','34','Pending tasks','12 due within 7 days','var(--orange)')+
+  '</div>'+
+  '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:22px">'+
+    stat('alert',delayedP.length,'Delayed projects','Alu Avenue · Food Park','var(--red)')+
+    stat('users','4','Site engineers & PMs','deployed across sites','var(--navy2)')+
+    stat('wallet',nairaM(totalBudget-totalSpent),'Remaining balance',Math.round((totalBudget-totalSpent)/totalBudget*100)+'% of budget left','var(--gold)')+
+    stat('check','47','Milestones met','across all projects YTD','var(--green)')+
+  '</div>'+
+  '<div class="cols" style="grid-template-columns:1.4fr 1fr;margin-bottom:22px">'+
+    '<div class="card">'+seclab('act','Project progress')+progRows+'</div>'+
+    '<div class="card">'+seclab('trend','Monthly expenses (₦M)')+areaChart(MONTHLY,'var(--gold)')+'</div>'+
+  '</div>'+
+  '<div class="card" style="margin-bottom:22px">'+seclab('wallet','Budget vs actual spend (₦M)')+groupedBar(bva)+'</div>'+
+  '<div class="cols" style="grid-template-columns:1fr 1fr">'+
+    '<div class="card">'+seclab('cal','Upcoming deadlines')+upcoming.map((u,i)=>
+      '<div style="display:flex;align-items:center;gap:14px;padding:12px 0;'+(i?'border-top:1px solid var(--line)':'')+'">'+
+      '<div style="min-width:44px;text-align:center"><div style="font-family:var(--serif);font-size:20px;color:var(--navy);line-height:1">'+u.d+'</div>'+
+      '<div style="font-size:9.5px;color:var(--faint);letter-spacing:.6px;text-transform:uppercase">days</div></div>'+
+      '<div style="width:1px;align-self:stretch;background:var(--line)"></div>'+
+      '<div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:var(--ink)">'+u.t+'</div>'+
+      '<div style="font-size:12px;color:var(--muted)">'+u.p+' · '+u.due+'</div></div></div>').join('')+'</div>'+
+    '<div class="card">'+seclab('act','Recent site updates')+feed.slice(0,6).map((f,i)=>
+      '<div style="display:flex;gap:12px;padding:11px 0;'+(i?'border-top:1px solid var(--line)':'')+'">'+
+      '<div style="margin-top:5px;width:8px;height:8px;border-radius:999px;background:var(--gold);flex-shrink:0"></div>'+
+      '<div><div style="font-size:13px;color:var(--ink);line-height:1.45">'+f.t+'</div>'+
+      '<div style="font-size:11.5px;color:var(--faint);margin-top:2px">'+f.p+' · '+f.d+'</div></div></div>').join('')+'</div>'+
+  '</div>';
+}
+
+let projectFilter='All';
+function vProjects(){
+  const filters=['All','On Track','Delayed','Completed'];
+  const shown=PROJECTS.filter(p=>projectFilter==='All'||p.status===projectFilter);
+  let fbtns=filters.map(f=>'<button class="fbtn '+(projectFilter===f?'on':'')+'" onclick="setFilter(\''+f+'\')">'+f+'</button>').join('');
+  let cards=shown.map(p=>
+    '<div class="pcard" onclick="openProject(\''+p.id+'\')">'+
+    '<div class="strip" style="background:'+statusColor(p.status)+'"></div>'+
+    '<div class="body">'+
+      '<div class="prow"><div class="pname">'+p.name+'</div>'+badge(p.status)+'</div>'+
+      '<div class="metaline">'+icon('pin','var(--gold)')+p.location+'</div>'+
+      '<div style="font-size:12.5px;color:var(--muted);margin-bottom:16px">Client: '+p.client+'</div>'+
+      '<div class="kv2"><div class="kv"><div class="kl">Budget</div><div class="kvv">'+nairaM(p.budget)+'</div></div>'+
+      '<div class="kv"><div class="kl">Timeline</div><div class="kvt">'+p.start+' → '+p.end+'</div></div></div>'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--muted);font-weight:500">Progress</span>'+
+      '<span style="font-size:12px;color:var(--navy);font-weight:700">'+p.progress+'%</span></div>'+progressBar(p.progress)+
+    '</div></div>').join('');
+  return '<div class="filters">'+fbtns+'</div><div class="pcards">'+cards+'</div>';
+}
+function setFilter(f){projectFilter=f;render()}
+
+function vProjectDetail(id){
+  const p=PROJECTS.find(x=>x.id===id);
+  const spendPct=Math.round(p.spent/p.budget*100);
+  const riskColor=l=>l==='High'?'var(--red)':l==='Medium'?'var(--amber)':'var(--muted)';
+  const imgs=['Front elevation','Ongoing works','Site progress','Quality check'];
+  return ''+
+  '<button class="backbtn" onclick="backToProjects()">'+icon('back','var(--muted)')+' All projects</button>'+
+  '<div class="card" style="padding:0;overflow:hidden;margin-top:18px">'+
+    '<div style="background:var(--navy);padding:26px 28px">'+badge(p.status)+
+    '<div style="font-family:var(--serif);font-size:28px;color:#fff;font-weight:500;margin:12px 0 8px">'+p.name+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:#C9D2E0">'+
+    '<span style="display:flex;align-items:center;gap:6px">'+icon('pin','var(--gold)')+p.location+'</span>'+
+    '<span>Client: '+p.client+'</span><span>PM: '+p.manager+'</span><span>Site Engineer: '+p.engineer+'</span></div></div>'+
+    '<div style="padding:24px;font-size:14px;color:var(--ink);line-height:1.6">'+p.description+'</div></div>'+
+  '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:22px 0">'+
+    stat('trend',p.progress+'%','Completion','','var(--navy2)')+
+    stat('wallet',nairaM(p.budget),'Approved budget','','var(--gold)')+
+    stat('bank',nairaM(p.spent),'Spent ('+spendPct+'%)','','var(--orange)')+
+    stat('cal',p.end,'Expected completion','','var(--green)')+'</div>'+
+  '<div class="card" style="margin-bottom:22px">'+seclab('hat','Site images')+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">'+
+    imgs.map(c=>'<div style="border-radius:10px;overflow:hidden;border:1px solid var(--line)">'+
+    '<div style="height:110px;background:linear-gradient(135deg,var(--navy),var(--navy3));display:flex;align-items:center;justify-content:center">'+
+    '<span style="width:26px;height:26px;display:block">'+icon('hat','var(--gold)')+'</span></div>'+
+    '<div style="padding:8px 10px;font-size:11.5px;color:var(--muted);background:var(--bg)">'+c+'</div></div>').join('')+'</div>'+
+    '<div style="font-size:11.5px;color:var(--faint);margin-top:10px">Photo tiles are placeholders — wire these to your site-report uploads.</div></div>'+
+  '<div class="cols" style="grid-template-columns:1.3fr 1fr">'+
+    '<div class="cols">'+
+      '<div class="card">'+seclab('check','Milestones')+p.milestones.map((m,i)=>
+        '<div style="display:flex;gap:14px;padding-bottom:'+(i<p.milestones.length-1?'18px':'0')+'">'+
+        '<div style="display:flex;flex-direction:column;align-items:center">'+
+        '<div style="width:14px;height:14px;border-radius:999px;background:'+(m.done?'var(--green)':'#fff')+';border:2px solid '+(m.done?'var(--green)':'var(--faint)')+'"></div>'+
+        (i<p.milestones.length-1?'<div style="width:2px;flex:1;background:var(--line);margin-top:2px"></div>':'')+'</div>'+
+        '<div><div style="font-size:13.5px;font-weight:600;color:'+(m.done?'var(--ink)':'var(--muted)')+'">'+m.name+'</div>'+
+        '<div style="font-size:12px;color:var(--faint)">'+m.date+(m.done?' · Complete':'')+'</div></div></div>').join('')+'</div>'+
+      '<div class="card">'+seclab('clip','Tasks')+(p.tasks.length===0?'<div style="font-size:13px;color:var(--faint)">No open tasks — project closed out.</div>':
+        p.tasks.map((t,i)=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;'+(i?'border-top:1px solid var(--line)':'')+'">'+
+        '<div><div style="font-size:13.5px;font-weight:600;color:var(--ink)">'+t.name+'</div>'+
+        '<div style="font-size:12px;color:var(--muted)">'+t.assignee+' · due '+t.due+'</div></div>'+
+        badge(t.status==='In Progress'?'On Track':'Delayed')+'</div>').join(''))+'</div>'+
+    '</div>'+
+    '<div class="cols">'+
+      '<div class="card">'+seclab('wallet','Budget breakdown')+p.breakdown.map(b=>
+        '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+        '<span style="font-size:12.5px;color:var(--ink)">'+b.item+'</span>'+
+        '<span style="font-size:12.5px;font-weight:700;color:var(--navy)">'+nairaM(b.amount)+'</span></div>'+
+        progressBar(b.amount/p.budget*100,5)+'</div>').join('')+'</div>'+
+      (p.materials.length?'<div class="card">'+seclab('pkg','Materials used')+p.materials.map((m,i)=>
+        '<div style="display:flex;justify-content:space-between;padding:9px 0;'+(i?'border-top:1px solid var(--line)':'')+'">'+
+        '<div><div style="font-size:13px;color:var(--ink);font-weight:500">'+m.name+'</div>'+
+        '<div style="font-size:11.5px;color:var(--muted)">'+m.qty+'</div></div>'+
+        '<div style="font-family:var(--serif);font-size:14px;color:var(--navy)">'+nairaM(m.cost)+'</div></div>').join('')+'</div>':'')+
+      '<div class="card">'+seclab('alert','Risks & delays')+p.risks.map((r,i)=>
+        '<div style="display:flex;gap:10px;padding:9px 0;'+(i?'border-top:1px solid var(--line)':'')+'">'+
+        '<span style="margin-top:2px;font-size:10px;font-weight:700;color:#fff;background:'+riskColor(r.level)+';padding:2px 8px;border-radius:999px;height:fit-content;white-space:nowrap">'+r.level+'</span>'+
+        '<span style="font-size:13px;color:var(--ink);line-height:1.45">'+r.text+'</span></div>').join('')+'</div>'+
+      '<div class="card">'+seclab('act','Recent updates')+p.updates.map((u,i)=>
+        '<div style="padding:9px 0;'+(i?'border-top:1px solid var(--line)':'')+'">'+
+        '<div style="font-size:13px;color:var(--ink);line-height:1.45">'+u.text+'</div>'+
+        '<div style="font-size:11.5px;color:var(--faint);margin-top:2px">'+u.date+'</div></div>').join('')+'</div>'+
+    '</div>'+
+  '</div>';
+}
+
+function vReports(){
+  let opts=activeP.map(p=>'<option>'+p.name+'</option>').join('');
+  const form='<div class="card" style="height:fit-content">'+seclab('file','Submit site report')+
+    '<div class="field"><label class="fl">Project</label><select id="f_project">'+opts+'</select></div>'+
+    '<div class="field"><label class="fl">Date</label><input id="f_date" placeholder="e.g. 18 Jul 2026"/></div>'+
+    '<div class="field"><label class="fl">Work completed</label><textarea id="f_work" rows="2" placeholder="Describe work done on site today"></textarea></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+    '<div class="field"><label class="fl">Workers present</label><input id="f_workers" placeholder="e.g. 24"/></div>'+
+    '<div class="field"><label class="fl">Equipment used</label><input id="f_equipment" placeholder="e.g. Excavator, roller"/></div></div>'+
+    '<div class="field"><label class="fl">Materials delivered</label><textarea id="f_materials" rows="2" placeholder="e.g. 40 tonnes granite"></textarea></div>'+
+    '<div class="field"><label class="fl">Problems encountered</label><textarea id="f_problems" rows="2" placeholder="Any issues or delays (optional)"></textarea></div>'+
+    '<button class="submit" onclick="submitReport()">'+icon('plus','#fff')+' Submit report</button>'+
+    '<div id="okmsg"></div></div>';
+  const list='<div style="display:flex;flex-direction:column;gap:16px">'+seclab('clip','Submitted reports')+
+    REPORTS.map(r=>'<div class="card" style="padding:18px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'+
+    '<div style="font-family:var(--serif);font-size:16px;color:var(--navy);font-weight:500">'+r.project+'</div>'+
+    '<span style="font-size:12px;color:var(--muted);white-space:nowrap">'+r.date+'</span></div>'+
+    '<div style="font-size:13.5px;color:var(--ink);line-height:1.5;margin-bottom:12px">'+r.work+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">'+
+    (r.workers?'<span class="pill"><b>Workers</b> '+r.workers+'</span>':'')+
+    (r.equipment?'<span class="pill"><b>Equipment</b> '+r.equipment+'</span>':'')+
+    (r.materials?'<span class="pill"><b>Materials</b> '+r.materials+'</span>':'')+'</div>'+
+    (r.problems?'<div style="margin-top:12px;display:flex;gap:8px;background:var(--amberSoft);padding:9px 12px;border-radius:9px">'+
+    '<span style="width:15px;height:15px;flex-shrink:0;margin-top:1px">'+icon('alert','var(--amber)')+'</span>'+
+    '<span style="font-size:12.5px;color:#7A5A10">'+r.problems+'</span></div>':'')+'</div>').join('')+'</div>';
+  return '<div class="cols" style="grid-template-columns:0.9fr 1.1fr">'+form+list+'</div>';
+}
+function submitReport(){
+  const g=id=>document.getElementById(id).value;
+  if(!g('f_date')||!g('f_work')){document.getElementById('okmsg').innerHTML=
+    '<div class="okmsg" style="color:var(--red);background:var(--redSoft)">Add at least a date and the work completed.</div>';return}
+  REPORTS.unshift({id:Date.now(),project:g('f_project'),date:g('f_date'),work:g('f_work'),
+    workers:g('f_workers'),equipment:g('f_equipment'),materials:g('f_materials'),problems:g('f_problems')});
+  render();
+}
+
+function vFinance(){
+  const remaining=totalBudget-totalSpent;
+  const cum=MONTHLY.map((d,i,a)=>({m:d.m,v:a.slice(0,i+1).reduce((s,x)=>s+x.s,0)}));
+  const varData=activeP.map(p=>({name:p.name.split(' ')[0],v:+(p.budget*(p.progress/100)-p.spent).toFixed(1)}));
+  const payColor=s=>s==='Paid'?'greenSoft;color:var(--green)':s==='Pending'?'amberSoft;color:var(--amber)':'bg;color:var(--muted)';
+  return ''+
+  '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:22px">'+
+    stat('wallet',nairaM(totalBudget),'Approved budget','','var(--navy2)')+
+    stat('bank',nairaM(totalSpent),'Amount spent','','var(--orange)')+
+    stat('trend',nairaM(remaining),'Remaining balance','','var(--green)')+
+    stat('alert',Math.round(totalSpent/totalBudget*100)+'%','Budget utilisation','','var(--gold)')+'</div>'+
+  '<div class="cols" style="grid-template-columns:1fr 1fr;margin-bottom:22px">'+
+    '<div class="card">'+seclab('trend','Cumulative spend (₦M)')+lineChart(cum,'var(--navy2)')+'</div>'+
+    '<div class="card">'+seclab('wallet','Budget variance by project (₦M)')+varianceChart(varData)+
+    '<div style="font-size:11.5px;color:var(--faint);margin-top:8px">Positive = value of work ahead of spend. Negative = spend ahead of progress.</div></div>'+
+  '</div>'+
+  '<div class="card">'+seclab('bank','Contractor & material payments')+
+    '<div class="tblwrap"><table style="min-width:640px"><thead><tr>'+
+    ['Reference','Payee','Project','Amount','Date','Status'].map((h,i)=>'<th style="'+(i===3?'text-align:right':'')+'">'+h+'</th>').join('')+'</tr></thead><tbody>'+
+    PAYMENTS.map(p=>'<tr><td>'+p.ref+'</td><td style="color:var(--ink);font-weight:600">'+p.to+'</td><td>'+p.project+'</td>'+
+    '<td style="font-family:var(--serif);font-size:14px;color:var(--navy);text-align:right">'+naira(p.amount)+'</td><td>'+p.date+'</td>'+
+    '<td><span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--'+payColor(p.status)+'">'+p.status+'</span></td></tr>').join('')+
+    '</tbody></table></div></div>';
+}
+
+function vTeam(){
+  const depts=[...new Set(TEAM.map(m=>m.dept))];
+  const dir='<div class="card" style="margin-bottom:22px">'+seclab('users','Team directory')+
+    depts.map(d=>'<div style="margin-bottom:18px"><div style="font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">'+d+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">'+
+    TEAM.filter(m=>m.dept===d).map(m=>'<div style="display:flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px">'+
+    '<div class="avatar">'+m.initials+'</div><div><div style="font-size:13px;font-weight:600;color:var(--ink);line-height:1.2">'+m.name+'</div>'+
+    '<div style="font-size:11.5px;color:var(--muted)">'+m.role+'</div></div></div>').join('')+'</div></div>').join('')+'</div>';
+  const chipClass=s=>s==='Done'?'chip-done':s==='In Progress'?'chip-prog':'chip-todo';
+  const tasks='<div class="card">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center">'+seclab('clip','Assigned tasks')+
+    '<span style="font-size:12px;color:var(--faint);margin-bottom:16px">Tap a status to advance it</span></div>'+
+    '<div class="tblwrap"><table style="min-width:640px"><thead><tr>'+
+    ['Task','Assigned to','Project','Due','Status'].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
+    TASKS.map((t,i)=>'<tr><td style="color:var(--ink);font-weight:600">'+t.name+'</td><td>'+t.assignee+'</td><td>'+t.project+'</td><td>'+t.due+'</td>'+
+    '<td><button class="taskchip '+chipClass(t.status)+'" onclick="cycleTask('+i+')">'+t.status+'</button></td></tr>').join('')+
+    '</tbody></table></div></div>';
+  return dir+tasks;
+}
+function cycleTask(i){const order=['To Do','In Progress','Done'];
+  TASKS[i].status=order[(order.indexOf(TASKS[i].status)+1)%3];render()}
+
+/* ============================ ROUTER ============================ */
+const NAV=[
+  {id:'overview',label:'Overview',icon:'dash',title:'Overview Dashboard'},
+  {id:'projects',label:'Projects',icon:'building',title:'Projects'},
+  {id:'reports',label:'Site Reports',icon:'file',title:'Site Reports'},
+  {id:'finance',label:'Finance',icon:'wallet',title:'Finance'},
+  {id:'team',label:'Team & Tasks',icon:'users',title:'Team & Tasks'},
+];
+let state={view:'overview',projId:null};
+function go(v){state.view=v;state.projId=null;render()}
+function openProject(id){state.projId=id;render()}
+function backToProjects(){state.projId=null;render()}
+
+function render(){
+  // nav
+  document.getElementById('nav').innerHTML=NAV.map(n=>
+    '<button class="navbtn '+(state.view===n.id?'active':'')+'" onclick="go(\''+n.id+'\')">'+icon(n.icon)+n.label+'</button>').join('');
+  // header
+  const cur=NAV.find(n=>n.id===state.view);
+  const inDetail=state.view==='projects'&&state.projId;
+  document.getElementById('title').textContent=inDetail?'Project Detail':cur.title;
+  document.getElementById('crumb').innerHTML='<span>Dashboard</span>'+(inDetail?'<span style="width:13px;height:13px;display:inline-block">'+icon('chev','var(--faint)')+'</span><span>Project</span>':'');
+  // body
+  let html='';
+  if(state.view==='overview')html=vOverview();
+  else if(state.view==='projects')html=state.projId?vProjectDetail(state.projId):vProjects();
+  else if(state.view==='reports')html=vReports();
+  else if(state.view==='finance')html=vFinance();
+  else if(state.view==='team')html=vTeam();
+  document.getElementById('view').innerHTML=html;
+  window.scrollTo(0,0);
+}
+document.getElementById('today').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+render();
+</script>
+</body>
+</html>
