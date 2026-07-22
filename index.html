@@ -27,7 +27,11 @@
 
   .app{display:flex;min-height:100vh}
   /* sidebar */
-  .sidebar{width:250px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .sidebar{width:250px;background:var(--navy);flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;transition:transform .28s ease}
+  .menubtn{display:none;background:none;border:none;cursor:pointer;padding:6px;margin-right:12px;flex-shrink:0}
+  .menubtn span{display:block;width:22px;height:2px;background:var(--navy);margin:5px 0;border-radius:2px}
+  .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(11,30,63,.45);z-index:19}
+  .sidebar-close{display:none}
   .brand{padding:26px 22px 20px;display:flex;align-items:center;gap:11px}
   .brand .logo{width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:20px;font-weight:600;color:var(--navy)}
   .brand .name{font-family:var(--serif);font-size:16px;color:#fff;font-weight:500;line-height:1.1}
@@ -111,7 +115,17 @@
   .backbtn svg{width:16px;height:16px;stroke:var(--muted)}
 
   .cols{display:grid;gap:22px}
-  @media(max-width:900px){.sidebar{display:none}.cols,.grid{grid-template-columns:1fr!important}}
+  @media(max-width:900px){
+    .cols,.grid{grid-template-columns:1fr!important}
+    .menubtn{display:block}
+    .sidebar{position:fixed;top:0;left:0;z-index:20;transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.25)}
+    .sidebar.open{transform:translateX(0)}
+    .sidebar-backdrop.open{display:block}
+    .sidebar-close{display:block;position:absolute;top:18px;right:16px;background:none;border:none;cursor:pointer;padding:6px}
+    .sidebar-close span{display:block;width:18px;height:2px;background:#9AA6BC;border-radius:2px}
+    .sidebar-close span:first-child{transform:rotate(45deg) translate(3px,4px)}
+    .sidebar-close span:last-child{transform:rotate(-45deg) translate(3px,-4px)}
+  }
 
   .avatar{width:38px;height:38px;border-radius:999px;background:var(--navy);color:var(--gold);font-family:var(--serif);font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .taskchip{cursor:pointer;border:none;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:999px}
@@ -124,7 +138,9 @@
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
+  <div class="sidebar-backdrop" id="backdrop" onclick="closeSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" onclick="closeSidebar()"><span></span><span></span></button>
     <div class="brand">
       <div class="logo">P</div>
       <div>
@@ -140,9 +156,12 @@
   </aside>
   <main>
     <header class="top">
-      <div>
-        <div class="crumb" id="crumb"><span>Dashboard</span></div>
-        <h1 id="title">Overview Dashboard</h1>
+      <div style="display:flex;align-items:center">
+        <button class="menubtn" onclick="openSidebar()"><span></span><span></span><span></span></button>
+        <div>
+          <div class="crumb" id="crumb"><span>Dashboard</span></div>
+          <h1 id="title">Overview Dashboard</h1>
+        </div>
       </div>
       <div class="date">
         <div class="d" id="today"></div>
@@ -490,9 +509,11 @@ const NAV=[
   {id:'team',label:'Team & Tasks',icon:'users',title:'Team & Tasks'},
 ];
 let state={view:'overview',projId:null};
-function go(v){state.view=v;state.projId=null;render()}
-function openProject(id){state.projId=id;render()}
+function go(v){state.view=v;state.projId=null;render();closeSidebar()}
+function openProject(id){state.projId=id;render();closeSidebar()}
 function backToProjects(){state.projId=null;render()}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('backdrop').classList.add('open');document.body.style.overflow='hidden'}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('backdrop').classList.remove('open');document.body.style.overflow=''}
 
 function render(){
   // nav
